@@ -3,34 +3,41 @@ import numpy as np
 import cv
 
 class mokomokoGenerator:
-  def __init__(self, g, k, end, w, fp):
+  def __init__(self, g, k, end, mask):
+    #bind
     self.g = g
     self.k = k
     self.end = end
-    self.w = w
-    self.fp = fp
-    self.x = len(w)
-    self.y = len(w[0])
+    self.mask = mask
+    #initial setting
+    self.x = len(self.mask)
+    self.y = len(self.mask[0])
+    self.w = np.zeros((self.x,self.y,3))
+    for x in xrange(self.x):
+      for y in xrange(self.y):
+        self.w[x][y][0] = x
+        self.w[x][y][1] = y
     self.v = np.zeros((self.x,self.y,3))
     self.f = np.zeros((self.x,self.y,3))
     self.zero = np.zeros((3))
 
   def run(self):
     e = self.iterate()
-    for i in xrange(50):
+    for i in xrange(20):
       e = self.iterate()
 
   def outGnuplot(self):
     for x in xrange(self.x):
       for y in xrange(self.y):
         print "%f %f %f"%(self.w[x][y][0],self.w[x][y][1],self.w[x][y][2])
+      print ""
 
   def iterate(self):
     eMax = 0
     self.f = np.zeros((self.x,self.y,3))
     for x in xrange(1, self.x - 1):
       for y in xrange(1, self.y - 1):
-        if self.fp[x][y] != 1:
+        if self.mask[x][y] != 0:
           #calculate f
           self.f[x][y] = np.zeros(3)
           self.f[x][y] += self.g
@@ -49,15 +56,8 @@ class mokomokoGenerator:
 g = np.array([0, 0, 0.0001])
 k = 0.02 
 end = 0.0001
-w = np.zeros((20, 20, 3))
-for x in xrange(20):
-  for y in xrange(20):
-    w[x][y][0] = x
-    w[x][y][1] = y
-fp = np.zeros((20, 20))
-for x in xrange(10):
-  for y in xrange(10):
-    fp[x][y] = 1
-m = mokomokoGenerator(g, k, end, w, fp)
+im = cv.LoadImageM("teamlab.bmp", cv.CV_LOAD_IMAGE_GRAYSCALE)
+mask = np.asarray(im)
+m = mokomokoGenerator(g, k, end, mask)
 m.run()
-m.outGnuplot()()
+m.outGnuplot()
