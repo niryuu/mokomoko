@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import cv
+import sdxf
 
 class mokomokoGenerator:
   def __init__(self, g, k, end, mask):
@@ -53,11 +54,33 @@ class mokomokoGenerator:
   def getDistance(self, arrayA, arrayB):
     return arrayA - arrayB
 
+  def outDXF(self):
+    d = sdxf.Drawing()
+    for x in xrange(self.x-1):
+      for y in xrange(self.y-1):
+        d.append(sdxf.Face(points = [
+        (self.w[x][y][0], self.w[x][y][1], self.w[x][y][2]),
+        (self.w[x][y+1][0], self.w[x][y+1][1], self.w[x][y+1][2]),
+        (self.w[x+1][y+1][0], self.w[x+1][y+1][1], self.w[x+1][y+1][2]),
+        (self.w[x+1][y][0], self.w[x+1][y][1], self.w[x+1][y][2]),
+        ]))
+    d.saveas('out.dxf')
+
+  def regulate(self):
+    zmax = 0
+    for x in xrange(self.x):
+      for y in xrange(self.y):
+        zmax = self.w[x][y][2] if self.w[x][y][2] > zmax else zmax
+    for x in xrange(self.x):
+      for y in xrange(self.y):
+        self.w[x][y][2] /= zmax
+
 g = np.array([0, 0, 0.0001])
 k = 0.02 
 end = 0.0001
-im = cv.LoadImageM("teamlab.bmp", cv.CV_LOAD_IMAGE_GRAYSCALE)
+im = cv.LoadImageM("oquno.bmp", cv.CV_LOAD_IMAGE_GRAYSCALE)
 mask = np.asarray(im)
 m = mokomokoGenerator(g, k, end, mask)
 m.run()
-m.outGnuplot()
+m.regulate()
+m.outDXF()
